@@ -11,7 +11,7 @@ import (
 
 var updatecmd = &cobra.Command{
 	Use:   "update",
-	Short: "Adds an app to LIFF. You can add up to 30 LIFF apps on one channel.",
+	Short: "Updates LIFF app settings.",
 	Run: func(cmd *cobra.Command, args []string) {
 		liff.SetAccessToken(viper.GetString("access_token"))
 		fmt.Println("finding LIFF application...")
