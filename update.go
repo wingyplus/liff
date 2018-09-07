@@ -30,7 +30,6 @@ var updatecmd = &cobra.Command{
 				if vu == "" {
 					vu = app.View.URL
 				}
-				fmt.Println(vt, vu)
 				if err := liff.Update(LiffID, &liff.View{Type: vt, URL: vu}); err != nil {
 					report(err)
 				}
