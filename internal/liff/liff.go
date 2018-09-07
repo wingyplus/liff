@@ -48,6 +48,32 @@ func ListApps() ([]*App, error) {
 	return result.Apps, nil
 }
 
+// Update LIFF app settings.
+func Update(liffID string, view *View) error {
+	b, err := json.Marshal(view)
+	if err != nil {
+		return err
+	}
+	r, err := req("PUT", "/liff/v1/apps/"+liffID+"/view", bytes.NewBuffer(b))
+	if err != nil {
+		return err
+	}
+	resp, err := http.DefaultClient.Do(r)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusUnauthorized {
+		return errors.New("unauthorized")
+	}
+	if resp.StatusCode == http.StatusBadRequest {
+		b, _ := ioutil.ReadAll(resp.Body)
+		return errors.New(string(b))
+	}
+
+	return nil
+}
+
 // Adds an app to LIFF. It returns liffID if add success.
 func Add(view *View) (liffID string, err error) {
 	b, err := json.Marshal(struct {

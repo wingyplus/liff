@@ -8,8 +8,6 @@ import (
 	"github.com/wingyplus/liff/internal/liff"
 )
 
-var LiffID string
-
 var deletecmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Deletes a LIFF app.",
@@ -24,7 +22,6 @@ var deletecmd = &cobra.Command{
 }
 
 func init() {
-	deletecmd.Flags().StringVar(&LiffID, "liff-id", "", "ID of the LIFF app to be deleted")
-	deletecmd.MarkFlagRequired("liff-id")
+	bindLiffIDFlag(deletecmd)
 	rootcmd.AddCommand(deletecmd)
 }
