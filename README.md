@@ -20,6 +20,12 @@ $ liff list
 $ liff add --view-type <compact,tall,full> --view-url https://<your-url>
 ```
 
+## Update LIFF app settings
+
+```bash
+$ liff update --liff-id <id> --view-type <compact,tall,full> --view-url https://<your-url>
+```
+
 ## Delete a LIFF app
 
 ```bash
