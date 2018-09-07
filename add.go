@@ -27,8 +27,6 @@ var addcmd = &cobra.Command{
 }
 
 func init() {
-	viewBindFlags(addcmd.Flags())
-	addcmd.MarkFlagRequired("view-type")
-	addcmd.MarkFlagRequired("view-url")
+	bindViewFlags(addcmd, true, true)
 	rootcmd.AddCommand(addcmd)
 }

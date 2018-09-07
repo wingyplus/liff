@@ -43,7 +43,7 @@ var updatecmd = &cobra.Command{
 }
 
 func init() {
-	viewBindFlags(updatecmd.Flags())
+	bindViewFlags(updatecmd, false, false)
 	bindLiffIDFlag(updatecmd)
 	rootcmd.AddCommand(updatecmd)
 }
