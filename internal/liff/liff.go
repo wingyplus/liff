@@ -13,6 +13,9 @@ import (
 var (
 	endpoint    = "https://api.line.me"
 	accessToken string
+
+	UnauthorizedErr    = errors.New("unauthorized")
+	LiffAppNotFoundErr = errors.New("no LIFF application(s) on this channel")
 )
 
 type App struct {
@@ -35,10 +38,10 @@ func ListApps() ([]*App, error) {
 		return nil, err
 	}
 	if resp.StatusCode == http.StatusUnauthorized {
-		return nil, errors.New("unauthorized")
+		return nil, UnauthorizedErr
 	}
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, errors.New("no LIFF applications on the channel.")
+		return nil, LiffAppNotFoundErr
 	}
 
 	var result struct {
@@ -64,7 +67,7 @@ func Update(liffID string, view *View) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusUnauthorized {
-		return errors.New("unauthorized")
+		return UnauthorizedErr
 	}
 	if resp.StatusCode == http.StatusBadRequest {
 		b, _ := ioutil.ReadAll(resp.Body)
@@ -94,7 +97,7 @@ func Add(view *View) (liffID string, err error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusUnauthorized {
-		return "", errors.New("unauthorized")
+		return "", UnauthorizedErr
 	}
 	if resp.StatusCode == http.StatusBadRequest {
 		b, _ := ioutil.ReadAll(resp.Body)
@@ -118,10 +121,10 @@ func Delete(id string) error {
 		return err
 	}
 	if resp.StatusCode == http.StatusUnauthorized {
-		return errors.New("unauthorized")
+		return UnauthorizedErr
 	}
 	if resp.StatusCode == http.StatusNotFound {
-		return errors.New("no LIFF applications on the channel.")
+		return LiffAppNotFoundErr
 	}
 	return nil
 }
