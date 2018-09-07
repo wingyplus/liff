@@ -21,7 +21,7 @@ var addcmd = &cobra.Command{
 		if err != nil {
 			report(err)
 		}
-		fmt.Printf("LIFF id: %s", id)
+		fmt.Printf("LIFF id: %s\n", id)
 		fmt.Println("done")
 	},
 }
