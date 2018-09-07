@@ -33,44 +33,35 @@ func ListApps() ([]*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := http.DefaultClient.Do(r)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode == http.StatusUnauthorized {
+	defer r.Body.Close()
+
+	if r.StatusCode == http.StatusUnauthorized {
 		return nil, UnauthorizedErr
 	}
-	if resp.StatusCode == http.StatusNotFound {
+	if r.StatusCode == http.StatusNotFound {
 		return nil, LiffAppNotFoundErr
 	}
 
 	var result struct {
 		Apps []*App `json:"apps"`
 	}
-	json.NewDecoder(resp.Body).Decode(&result)
+	json.NewDecoder(r.Body).Decode(&result)
 	return result.Apps, nil
 }
 
 // Update LIFF app settings.
 func Update(liffID string, view *View) error {
-	b, err := json.Marshal(view)
+	r, err := req("PUT", "/liff/v1/apps/"+liffID+"/view", view)
 	if err != nil {
 		return err
 	}
-	r, err := req("PUT", "/liff/v1/apps/"+liffID+"/view", bytes.NewBuffer(b))
-	if err != nil {
-		return err
-	}
-	resp, err := http.DefaultClient.Do(r)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode == http.StatusUnauthorized {
+	defer r.Body.Close()
+
+	if r.StatusCode == http.StatusUnauthorized {
 		return UnauthorizedErr
 	}
-	if resp.StatusCode == http.StatusBadRequest {
-		b, _ := ioutil.ReadAll(resp.Body)
+	if r.StatusCode == http.StatusBadRequest {
+		b, _ := ioutil.ReadAll(r.Body)
 		return errors.New(string(b))
 	}
 
@@ -79,7 +70,7 @@ func Update(liffID string, view *View) error {
 
 // Adds an app to LIFF. It returns liffID if add success.
 func Add(view *View) (liffID string, err error) {
-	b, err := json.Marshal(struct {
+	r, err := req("POST", "/liff/v1/apps", struct {
 		View *View `json:"view"`
 	}{
 		View: view,
@@ -87,27 +78,20 @@ func Add(view *View) (liffID string, err error) {
 	if err != nil {
 		return "", err
 	}
-	r, err := req("POST", "/liff/v1/apps", bytes.NewBuffer(b))
-	if err != nil {
-		return "", err
-	}
-	resp, err := http.DefaultClient.Do(r)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode == http.StatusUnauthorized {
+	defer r.Body.Close()
+
+	if r.StatusCode == http.StatusUnauthorized {
 		return "", UnauthorizedErr
 	}
-	if resp.StatusCode == http.StatusBadRequest {
-		b, _ := ioutil.ReadAll(resp.Body)
+	if r.StatusCode == http.StatusBadRequest {
+		b, _ := ioutil.ReadAll(r.Body)
 		return "", errors.New(string(b))
 	}
 
 	var result struct {
 		LiffID string `json:"liffId"`
 	}
-	json.NewDecoder(resp.Body).Decode(&result)
+	json.NewDecoder(r.Body).Decode(&result)
 	return result.LiffID, nil
 }
 
@@ -116,16 +100,14 @@ func Delete(id string) error {
 	if err != nil {
 		return err
 	}
-	resp, err := http.DefaultClient.Do(r)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode == http.StatusUnauthorized {
+
+	if r.StatusCode == http.StatusUnauthorized {
 		return UnauthorizedErr
 	}
-	if resp.StatusCode == http.StatusNotFound {
+	if r.StatusCode == http.StatusNotFound {
 		return LiffAppNotFoundErr
 	}
+
 	return nil
 }
 
@@ -133,12 +115,30 @@ func SetAccessToken(token string) {
 	accessToken = token
 }
 
-func req(method, path string, body io.Reader) (*http.Request, error) {
-	r, err := http.NewRequest(method, endpoint+"/"+path, body)
+func req(method, path string, v interface{}) (*http.Response, error) {
+	body := marshal(v)
+
+	req, err := http.NewRequest(method, endpoint+"/"+path, body)
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", accessToken))
-	r.Header.Add("Content-Type", "application/json")
-	return r, nil
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", accessToken))
+	req.Header.Add("Content-Type", "application/json")
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func marshal(v interface{}) io.Reader {
+	if v == nil {
+		return nil
+	}
+	var buf bytes.Buffer
+	json.NewEncoder(&buf).Encode(v)
+	return &buf
 }
